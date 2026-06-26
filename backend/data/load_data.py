@@ -9,35 +9,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal, engine, Base
 from app.models import Movie, Rating, Favorite, WatchHistory, Review, User
-from app.core.config import settings
 
 
 def extract_year(title):
     match = re.search(r"\((\d{4})\)", title)
     return int(match.group(1)) if match else None
-
-
-def get_tmdb_data(imdb_id):
-    if not settings.TMDB_API_KEY or not imdb_id or not imdb_id.strip():
-        return None
-    try:
-        import requests
-        url = f"https://api.themoviedb.org/3/find/tt{imdb_id}?api_key={settings.TMDB_API_KEY}&external_source=imdb_id"
-        response = requests.get(url, timeout=5)
-        data = response.json()
-        if data.get("movie_results"):
-            movie = data["movie_results"][0]
-            return {
-                "tmdb_id": str(movie["id"]),
-                "poster_path": movie.get("poster_path"),
-                "overview": movie.get("overview"),
-                "vote_average": movie.get("vote_average"),
-                "vote_count": movie.get("vote_count"),
-                "popularity": movie.get("popularity"),
-            }
-    except Exception as e:
-        print(f"Warning: Failed to fetch TMDB data for {imdb_id}: {e}")
-    return None
 
 
 def reset_database(db):
@@ -98,20 +74,18 @@ def load_data(reset=False):
         year = extract_year(row["title"])
         imdb_id = str(int(row["imdbId"])).zfill(7) if pd.notna(row["imdbId"]) else None
         
-        tmdb_data = get_tmdb_data(imdb_id)
-        
         movie = Movie(
             id=row["movieId"],
             title=clean_title,
             genres=row["genres"],
             year=year,
             imdb_id=imdb_id,
-            tmdb_id=tmdb_data.get("tmdb_id") if tmdb_data else None,
-            poster_path=tmdb_data.get("poster_path") if tmdb_data else None,
-            overview=tmdb_data.get("overview") if tmdb_data else None,
-            vote_average=tmdb_data.get("vote_average", 0.0) if tmdb_data else 0.0,
-            vote_count=tmdb_data.get("vote_count", 0) if tmdb_data else 0,
-            popularity=tmdb_data.get("popularity", 0.0) if tmdb_data else 0.0,
+            tmdb_id=None,
+            poster_path=None,
+            overview=None,
+            vote_average=0.0,
+            vote_count=0,
+            popularity=0.0,
             tags=row["tags"],
         )
         movies_to_insert.append(movie)
@@ -157,7 +131,7 @@ def load_data(reset=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Load MovieLens data into the database")
+    parser = argparse.ArgumentParser(description="Load MovieLens data into the database (offline)")
     parser.add_argument("--reset", action="store_true", help="Clear existing data before loading")
     args = parser.parse_args()
     load_data(reset=args.reset)

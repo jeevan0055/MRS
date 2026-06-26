@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -184,7 +185,7 @@ def rate_movie(
 
 
 # Favorite endpoints
-@router.post("/favorite", response_model=FavoriteResponse)
+@router.post("/favorite")
 def toggle_favorite(
     favorite: FavoriteCreate,
     db: Session = Depends(get_db),
@@ -197,7 +198,7 @@ def toggle_favorite(
     if existing:
         db.delete(existing)
         db.commit()
-        return None  # Or appropriate response
+        return {"status": "removed", "movie_id": favorite.movie_id}
     new_favorite = Favorite(user_id=current_user.id, movie_id=favorite.movie_id)
     db.add(new_favorite)
     db.commit()
