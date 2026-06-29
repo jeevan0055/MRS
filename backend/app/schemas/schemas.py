@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserBase(BaseModel):
@@ -21,8 +22,7 @@ class UserResponse(UserBase):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
@@ -51,8 +51,7 @@ class MovieCreate(MovieBase):
 class MovieResponse(MovieBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RatingBase(BaseModel):
@@ -69,8 +68,7 @@ class RatingResponse(RatingBase):
     user_id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FavoriteBase(BaseModel):
@@ -87,8 +85,7 @@ class FavoriteResponse(FavoriteBase):
     created_at: datetime
     movie: MovieResponse
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WatchHistoryBase(BaseModel):
@@ -105,8 +102,7 @@ class WatchHistoryResponse(WatchHistoryBase):
     watched_at: datetime
     movie: MovieResponse
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReviewBase(BaseModel):
@@ -124,8 +120,7 @@ class ReviewResponse(ReviewBase):
     created_at: datetime
     user: UserResponse
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecommendationResponse(BaseModel):

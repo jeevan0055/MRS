@@ -9,14 +9,22 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
+    const userDataStr = localStorage.getItem('user')
+
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      const userDataStr = localStorage.getItem('user')
       if (userDataStr) {
-        const userData = JSON.parse(userDataStr)
-        setUser(userData)
+        try {
+          const userData = JSON.parse(userDataStr)
+          setUser(userData)
+        } catch {
+          localStorage.removeItem('user')
+        }
       }
+    } else {
+      delete axios.defaults.headers.common['Authorization']
     }
+
     setLoading(false)
   }, [])
 
@@ -24,19 +32,22 @@ export function AuthProvider({ children }) {
     const formData = new FormData()
     formData.append('username', username)
     formData.append('password', password)
-    const res = await axios.post('/login', formData)
+
+    const res = await axios.post('/login', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+
     const { access_token } = res.data
+    const userData = { username, id: 1 }
+
     localStorage.setItem('token', access_token)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-    
-    const userData = { username, id: 1 } // Use dummy user for now
-    setUser(userData)
     localStorage.setItem('user', JSON.stringify(userData))
+    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+    setUser(userData)
   }
 
   const register = async (username, email, password) => {
-    const res = await axios.post('/register', { username, email, password })
-    // Auto login after register
+    await axios.post('/register', { username, email, password })
     await login(username, password)
   }
 
