@@ -1,21 +1,42 @@
-import pandas as pd
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.neighbors import NearestNeighbors
-from scipy.sparse import csr_matrix
 import re
-from typing import List, Tuple, Dict
+from typing import List, Tuple
+
+import numpy as np
+
+try:
+    import pandas as pd
+except ImportError:  # pragma: no cover
+    pd = None
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.neighbors import NearestNeighbors
+    from scipy.sparse import csr_matrix
+except ImportError:  # pragma: no cover
+    TfidfVectorizer = None
+    cosine_similarity = None
+    NearestNeighbors = None
+    csr_matrix = None
 
 
 class MovieRecommender:
-    def __init__(self, movies_df: pd.DataFrame, ratings_df: pd.DataFrame, tags_df: pd.DataFrame = None):
+    def __init__(self, movies_df, ratings_df, tags_df=None):
         self.movies_df = movies_df
         self.ratings_df = ratings_df
         self.tags_df = tags_df
 
+        if pd is None:
+            self.movies_df = []
+            self.ratings_df = []
+            return
+
         self._prepare_data()
+        if TfidfVectorizer is None or cosine_similarity is None:
+            return
         self._build_content_based_model()
+        if NearestNeighbors is None or csr_matrix is None:
+            return
         self._build_collaborative_model()
 
     def _prepare_data(self):
